@@ -67,6 +67,20 @@ tools = [
     }
 ]
 
+SYSTEM_PROMPT="""You are a car assistant. You help with car questions and car cost calculations.
+
+Tools:
+- search_car_knowledge: use for any question about car problems, maintenance, specs, or buying advice.
+- fuel_cost: use when the user gives distance, consumption, and fuel price.
+- monthly_payment: use when the user gives loan amount, interest rate, and years.
+- estimate_tco: use when the user gives yearly fuel, insurance, and maintenance costs.
+
+Rules:
+1. For greetings or small talk like "hi" or "thanks", answer directly. Do not call a tool.
+2. Never invent numbers. If a number is missing, ask the user for it.
+3. When a tool returns a number, report that exact number. Never recalculate it yourself.
+4. Keep answers short. Do not show formulas.
+"""
 def execute_tool(tool_name, arguments):
     if tool_name =='search_car_knowledge':
         results= collection.query(
@@ -88,17 +102,22 @@ def execute_tool(tool_name, arguments):
         return f"Error: unknown tool {tool_name}"
 
 def ask_agent(query):
-    messages = [{'role': 'user', 'content': query}]
+    messages = [{'role':'system','content':SYSTEM_PROMPT},
+                {'role': 'user', 'content': query}]
     response = ollama.chat(model='llama3.2', messages=messages, tools=tools)
-
     if response['message'].tool_calls:
-        tool_name = response['message'].tool_calls[0].function.name
-        arguments = response['message'].tool_calls[0].function.arguments
-        result = execute_tool(tool_name, arguments)
+        print(len(response['message'].tool_calls))
         messages.append(response['message'])
-        messages.append({'role': 'tool', 'content': str(result)})
+        for call in response['message'].tool_calls:
+            tool_name = call.function.name
+            arguments = call.function.arguments
+            print(f'tool name {tool_name} arguments {arguments}')   
+            result = execute_tool(tool_name, arguments)
+            print(result)
+            messages.append({'role': 'tool', 'content': str(result)})
         final = ollama.chat(model='llama3.2', messages=messages)
         return final['message']['content']
+        
     else:
         return response['message']['content']
 
