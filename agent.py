@@ -81,12 +81,22 @@ Rules:
 3. When a tool returns a number, report that exact number. Never recalculate it yourself.
 4. Keep answers short. Do not show formulas.
 """
+
+distance_threshold= 430
+
 def execute_tool(tool_name, arguments):
     if tool_name =='search_car_knowledge':
         results= collection.query(
             query_embeddings=[get_embedding(arguments['query'])],
             n_results=3
         )
+        docs=results['documents'][0]
+        distances=results['distances'][0]
+
+        good_docs=[doc for doc,dist in zip(docs,distances) if dist < distance_threshold]
+
+        if not good_docs:
+            return" I'm here to help you with cars"
         return "\n\n".join(results['documents'][0])
 
     elif tool_name == 'fuel_cost':
