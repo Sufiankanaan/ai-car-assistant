@@ -80,6 +80,7 @@ Rules:
 2. Never invent numbers. If a number is missing, ask the user for it.
 3. When a tool returns a number, report that exact number. Never recalculate it yourself.
 4. Keep answers short. Do not show formulas.
+5. The user cannot see tool results. When search_car_knowledge returns text, answer the user's question using that text, in your own words.
 """
 
 distance_threshold= 430
@@ -116,13 +117,16 @@ def ask_agent(query):
                 {'role': 'user', 'content': query}]
     response = ollama.chat(model='llama3.2', messages=messages, tools=tools)
     if response['message'].tool_calls:
-        print(len(response['message'].tool_calls))
+        
         messages.append(response['message'])
         for call in response['message'].tool_calls:
             tool_name = call.function.name
             arguments = call.function.arguments
             print(f'tool name {tool_name} arguments {arguments}')   
-            result = execute_tool(tool_name, arguments)
+            try:
+                result = execute_tool(tool_name, arguments)
+            except Exception as e:
+                result=f'Error : tool name {tool_name} {e}'
             print(result)
             messages.append({'role': 'tool', 'content': str(result)})
         final = ollama.chat(model='llama3.2', messages=messages)
