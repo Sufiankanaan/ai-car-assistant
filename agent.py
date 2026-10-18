@@ -93,12 +93,13 @@ def execute_tool(tool_name, arguments):
         )
         docs=results['documents'][0]
         distances=results['distances'][0]
+        print("distances:", distances) 
 
         good_docs=[doc for doc,dist in zip(docs,distances) if dist < distance_threshold]
 
         if not good_docs:
             return" I'm here to help you with cars"
-        return "\n\n".join(results['documents'][0])
+        return "\n\n".join(good_docs)  
 
     elif tool_name == 'fuel_cost':
         return fuel_cost(**arguments)
