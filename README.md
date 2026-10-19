@@ -39,7 +39,7 @@ Tool results returned to the model → natural answer
 Any PDF or Word file placed in `docs/` is added to the knowledge base on startup. The pipeline in `doc_loader.py`:
 
 1. **Convert** the file to text with MarkItDown
-2. **Remove repeated page footers** with a regex, so page numbers and booklet titles don't pollute retrieval
+2. **Remove repeated page footers**: short lines with a page number that repeat on 4+ pages are dropped, so page numbers and booklet titles don't pollute retrieval
 3. **Split** with a recursive character splitter (1000 chars, 75 overlap), breaking on paragraphs, then lines, then sentences
 4. **Merge short chunks** (under 200 chars) into the next one, so no chunk is left without context
 5. **Assign source ids** like `used_car_guide.pdf_chunk_7`, so every retrieved chunk can be traced back to its file
