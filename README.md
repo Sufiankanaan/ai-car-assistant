@@ -107,14 +107,13 @@ The app opens in your browser at http://localhost:8501
 ## ⚠️ Known Limitations
 
 - llama3.2 is a small model: it sometimes calls a tool for small talk, and may answer off-topic questions from its own knowledge when the search returns nothing relevant.
-- The vector store is in memory, so all documents are re-embedded on every start.
+- Changed or deleted files in `docs/` are not detected yet. Delete the `chroma_db/` folder to rebuild the knowledge base.
 - The relevance threshold (430) was tuned by hand on a small set of questions.
 
 ## 🔮 Roadmap
 
 - Deploy online (hosted LLM API + Hugging Face Spaces)
 - Fuel economy data as a pandas tool
-- Persistent vector store
 - Retrieval evaluation set for the new documents
 
 ## 📚 Sources
