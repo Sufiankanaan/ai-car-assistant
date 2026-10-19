@@ -48,6 +48,7 @@ for filename in os.listdir("docs"):
             embeddings=[get_embedding(doc)],
             documents=[doc]
         )
+        added+=1
         
 print(f"added:{added}, skipped:{skipped}")
 print("Total in collection:", collection.count())
