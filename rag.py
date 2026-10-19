@@ -8,7 +8,7 @@ with open('cars_knowledge.txt','r',encoding='utf-8') as f :
 
 chunk=[c.strip() for c in content.split('\n\n')if c.strip()]
 
-client = chromadb.Client()
+client = chromadb.PersistentClient(path="chroma_db")
 
 collection = client.get_or_create_collection(name='cars_docs')
 
