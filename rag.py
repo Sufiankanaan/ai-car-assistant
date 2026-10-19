@@ -57,9 +57,10 @@ if __name__=='__main__':
             print(f"📄 {idx} : {doc}")
         print(50*"-")
 
+        context='\n\n'.join(retrieved_context)
         prompt=f"""Answer the question based ONLY on the following context.
         If the context doesn't contain the answer, say so.
-        context:{'\n\n'.join(retrieved_context)}
+        context:{context}
         question:{query}
         Answer:"""
 

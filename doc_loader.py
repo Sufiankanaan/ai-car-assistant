@@ -1,10 +1,13 @@
 from markitdown import MarkItDown
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 import re
-import os 
+import os
+from collections import Counter
 
 md =MarkItDown(enable_plugins=False)
 MIN_LEN=200
+FOOTER_MIN_REPEATS=4
+FOOTER_MAX_LEN=100
 
 splitter =RecursiveCharacterTextSplitter(
     
@@ -20,14 +23,17 @@ splitter =RecursiveCharacterTextSplitter(
     ],
 )
 
-footer_pattern = re.compile(
-    r"^\s*(\d+\s+Buying a Used Car From a Dealer|Buying a Used Car From a Dealer\s+\d+)\s*$",
-    re.MULTILINE| re.IGNORECASE,
-
-)
+# a footer is a short line with a page number that repeats on many pages,
+# so compare lines with their digits masked
+def footer_key(line):
+    return re.sub(r"\d+","#",line.strip()).lower()
 
 def remove_footers(text):
-    cleaned =footer_pattern.sub("",text)
+    lines=text.splitlines()
+    counts=Counter(footer_key(l) for l in lines
+                   if re.search(r"\d",l) and len(l.strip())<=FOOTER_MAX_LEN)
+    footers={k for k,n in counts.items() if n>=FOOTER_MIN_REPEATS}
+    cleaned="\n".join(l for l in lines if footer_key(l) not in footers)
     return re.sub(r"\n{3,}","\n\n",cleaned)
 
 
