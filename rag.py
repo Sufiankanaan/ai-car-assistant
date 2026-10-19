@@ -12,7 +12,7 @@ client = chromadb.PersistentClient(path="chroma_db")
 
 collection = client.get_or_create_collection(name='cars_docs')
 
-existing_ids=set(collection.get()['ids'])
+existing_ids=set(collection.get(include=[])['ids'])
 print("Already stored:", len(existing_ids))
 
 def get_embedding(text):
@@ -48,8 +48,8 @@ for filename in os.listdir("docs"):
             embeddings=[get_embedding(doc)],
             documents=[doc]
         )
-        added+=1
-print(f"added:",added,", skipped: ",skipped)
+        
+print(f"added:{added}, skipped:{skipped}")
 print("Total in collection:", collection.count())
 
 if __name__=='__main__':
