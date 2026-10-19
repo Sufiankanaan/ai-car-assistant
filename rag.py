@@ -12,15 +12,24 @@ client = chromadb.PersistentClient(path="chroma_db")
 
 collection = client.get_or_create_collection(name='cars_docs')
 
+existing_ids=set(collection.get()['ids'])
+print("Already stored:", len(existing_ids))
+
 def get_embedding(text):
     return ollama.embeddings(model='nomic-embed-text',prompt=text)['embedding']
-
+added=0
+skipped=0
 for i ,doc in enumerate(chunk):
+    doc_id=f'cars_knowledge.txt_chunk_{i}'
+    if doc_id in existing_ids:
+        skipped+=1
+        continue
     collection.add(
-        ids=[f"cars_knowledge.txt_chunk_{i}"],
+        ids=[doc_id],
         embeddings=[get_embedding(doc)],
         documents=[doc]
     )
+    added+=1
 
 for filename in os.listdir("docs"):
 
@@ -31,12 +40,16 @@ for filename in os.listdir("docs"):
 
     chunks, ids = load_and_chunk(path) 
     for doc, doc_id in zip(chunks, ids):
+        if doc_id in existing_ids:
+            skipped+=1
+            continue
         collection.add(
             ids=[doc_id],
             embeddings=[get_embedding(doc)],
             documents=[doc]
         )
-
+        added+=1
+print(f"added:",added,", skipped: ",skipped)
 print("Total in collection:", collection.count())
 
 if __name__=='__main__':
