@@ -98,7 +98,7 @@ def execute_tool(tool_name, arguments):
         good_docs=[doc for doc,dist in zip(docs,distances) if dist < distance_threshold]
 
         if not good_docs:
-            return" I'm here to help you with cars"
+            return "No relevant information found in the car knowledge base. Tell the user I'm here to help you with cars"
         return "\n\n".join(good_docs)  
 
     elif tool_name == 'fuel_cost':
