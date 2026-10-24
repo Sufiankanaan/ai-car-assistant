@@ -1,7 +1,11 @@
-import ollama
 import chromadb
 import os
 from doc_loader import load_and_chunk
+from dotenv import load_dotenv
+from google import genai
+
+load_dotenv()
+gemini =genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
 with open('cars_knowledge.txt','r',encoding='utf-8') as f :
     content=f.read()
@@ -16,7 +20,12 @@ existing_ids=set(collection.get(include=[])['ids'])
 print("Already stored:", len(existing_ids))
 
 def get_embedding(text):
-    return ollama.embeddings(model='nomic-embed-text',prompt=text)['embedding']
+    result=gemini.models.embed_content(
+        model="gemini-embedding-001",
+        contents=text
+    )
+    return result.embeddings[0].values
+
 added=0
 skipped=0
 for i ,doc in enumerate(chunk):
@@ -77,11 +86,14 @@ if __name__=='__main__':
         context:{context}
         question:{query}
         Answer:"""
-
-        response=ollama.chat(model='llama3.2',
-                             messages=[{'role':'user','content':prompt}])
-
-        print(response['message']['content'])
+        try:
+            response=gemini.models.generate_content(
+                model= "gemini-3.1-flash-lite-preview",
+                contents=prompt
+            )
+            print(response.text)
+        except Exception as e:
+            print("Sorry, the model is busy. Try again.", e)
 
         print(45*'-')
 
