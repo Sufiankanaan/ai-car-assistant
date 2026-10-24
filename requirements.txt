@@ -1,5 +1,6 @@
 chromadb==1.5.9
-ollama==0.6.2
 streamlit==1.64.0
 markitdown[pdf,docx]
 langchain-text-splitters
+google-genai
+python-dotenv
