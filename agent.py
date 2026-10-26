@@ -1,7 +1,8 @@
 
 from tools import fuel_cost, monthly_payment, estimate_tco
 from rag import collection, get_embedding,gemini
-from google.genai import types
+from google.genai import types, errors
+import time
 
 
 SYSTEM_PROMPT="""You are a car assistant. You help with car questions and car cost calculations.
@@ -42,20 +43,33 @@ def search_car_knowledge(query:str)-> str:
         return "No relevant information found in the car knowledge base. Tell the user I'm here to help you with cars"
     return "\n\n".join(good_docs)
 
-
+MODELS = [
+    "gemini-3.5-flash-lite",
+    "gemini-3.5-flash",
+    "gemini-flash-lite-latest",
+    "gemini-3.1-flash-lite",
+] 
 def ask_agent(query):
-    try:
-        response= gemini.models.generate_content(
-            model='gemini-3.1-flash-lite-preview',
-            contents=query,
-            config=types.GenerateContentConfig(
-                system_instruction=SYSTEM_PROMPT,
-                tools=[search_car_knowledge, fuel_cost, monthly_payment, estimate_tco],
-            ),
-        )
-        return response.text
-    except Exception as e:
-        return f"Sorry, the model is busy. Try again. ({e})"
+    for model in MODELS:
+        for attempt in range(2):
+            try:
+                response= gemini.models.generate_content(
+                    model=model,
+                    contents=query,
+                    config=types.GenerateContentConfig(
+                        system_instruction=SYSTEM_PROMPT,
+                        tools=[search_car_knowledge, fuel_cost, monthly_payment, estimate_tco],
+                    ),
+                )
+                print(f"model used: {model}")
+                return response.text
+            except errors.APIError as e:
+                print(f"{model} failed (attempt {attempt + 1}): {e.code}")
+                if e.code in (429,503):
+                    time.sleep(2)
+                    continue
+                break
+    return "Sorry, the assistant is very busy right now. Please try again in a minute."
 
 
 if __name__=="__main__":
