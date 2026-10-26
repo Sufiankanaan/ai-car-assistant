@@ -10,6 +10,7 @@ python_version: "3.12"
 pinned: false
 license: mit
 ---
+**🔗 Live demo:** https://huggingface.co/spaces/ksufian/ai-car-assistant
 # 🚗 AI Car Assistant — RAG + Agent System
 
 An intelligent car assistant that answers questions from a knowledge base and performs calculations, deciding on its own which capability to use for each question. Combines Retrieval-Augmented Generation (RAG) with a tool-calling agent, served through a Streamlit web interface.
@@ -133,7 +134,6 @@ Not committed: `.env` (API key) and `chroma_db/` (rebuilt automatically).
 
 ## 🔮 Roadmap
 
-- Deploy online (Hugging Face Spaces)
 - Try Gemini's `task_type` option (separate document and query embeddings) and compare retrieval
 - Fuel economy data as a pandas tool
 - Retrieval evaluation set for the new documents
