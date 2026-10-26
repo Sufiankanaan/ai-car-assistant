@@ -1,3 +1,15 @@
+---
+title: AI Car Assistant
+emoji: 🚗
+colorFrom: blue
+colorTo: gray
+sdk: gradio
+sdk_version: "6.30.0"
+app_file: gradio_app.py
+python_version: "3.12"
+pinned: false
+license: mit
+---
 # 🚗 AI Car Assistant — RAG + Agent System
 
 An intelligent car assistant that answers questions from a knowledge base and performs calculations, deciding on its own which capability to use for each question. Combines Retrieval-Augmented Generation (RAG) with a tool-calling agent, served through a Streamlit web interface.
