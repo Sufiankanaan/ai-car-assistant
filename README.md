@@ -10,10 +10,10 @@ python_version: "3.12"
 pinned: false
 license: mit
 ---
-**🔗 Live demo:** https://huggingface.co/spaces/ksufian/ai-car-assistant
 # 🚗 AI Car Assistant — RAG + Agent System
+**🔗 Live demo:** https://huggingface.co/spaces/ksufian/ai-car-assistant
 
-An intelligent car assistant that answers questions from a knowledge base and performs calculations, deciding on its own which capability to use for each question. Combines Retrieval-Augmented Generation (RAG) with a tool-calling agent, served through a Streamlit web interface.
+An intelligent car assistant that answers questions from a knowledge base and performs calculations, deciding on its own which capability to use for each question. Combines Retrieval-Augmented Generation (RAG) with a tool-calling agent, served through a Gradio chat interface, live on Hugging Face Spaces.
 
 Runs on the Google Gemini API free tier, so it needs no local GPU and no paid account.
 
