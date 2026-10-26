@@ -1,3 +1,11 @@
+try:
+    import spaces
+
+    @spaces.GPU
+    def _zero_gpu_placeholder():
+        pass
+except ImportError:
+    pass
 import gradio as gr
 from agent import ask_agent
 
