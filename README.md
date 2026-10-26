@@ -71,14 +71,16 @@ The vector store is saved in `chroma_db/`. On each start, chunks that are alread
 - **API error handling:** if the Gemini API is busy or fails, the user gets a short message instead of a crash.
 - **Logging:** the search tool prints its query and retrieval distances for debugging.
 - **System prompt rules:** no tools for greetings, never invent numbers, report the tool's number exactly, answer from retrieved text.
+- **Model fallback:** if a Gemini model is busy (503) or rate-limited (429), the agent retries and then tries the next model in a tested list.
 
 ## 🛠️ Tech Stack
 
-- **Google Gemini API**: `gemini-3.1-flash-lite-preview` for chat and tool calling, `gemini-embedding-001` for embeddings
+- **Google Gemini API**: `gemini-3.5-flash-lite` for chat and tool calling (with fallback models), `gemini-embedding-001` for embeddings
 - **ChromaDB**: persistent vector database
 - **MarkItDown**: converts PDF and Word files to text
 - **LangChain Text Splitters**: recursive character chunking
-- **Streamlit**: web interface
+- **Gradio**: chat interface, deployed on Hugging Face Spaces
+- **Streamlit**: local chat interface
 - **Python 3.12**
 
 ## 🔧 Tools
