@@ -19,6 +19,7 @@ Rules:
 3. When a tool returns a number, report that exact number. Never recalculate it yourself.
 4. Keep answers short. Do not show formulas.
 5. The user cannot see tool results. When search_car_knowledge returns text, answer the user's question using that text, in your own words.
+6.you only help with cars for any other topic, politely say so and don’t answer from your own knowledge
 """
 
 distance_threshold= 0.85
@@ -49,7 +50,8 @@ MODELS = [
     "gemini-flash-lite-latest",
     "gemini-3.1-flash-lite",
 ] 
-def ask_agent(query):
+
+def ask_agent(query,return_tools=False):
     for model in MODELS:
         for attempt in range(2):
             try:
@@ -62,6 +64,14 @@ def ask_agent(query):
                     ),
                 )
                 print(f"model used: {model}")
+                if return_tools:
+                    tools_used=[
+                        part.function_call.name
+                        for content in (response.automatic_function_calling_history or [])
+                        for part in (content.parts or [])
+                        if part.function_call
+                    ]
+                    return response.text, tools_used
                 return response.text
             except errors.APIError as e:
                 print(f"{model} failed (attempt {attempt + 1}): {e.code}")
@@ -69,8 +79,8 @@ def ask_agent(query):
                     time.sleep(2)
                     continue
                 break
-    return "Sorry, the assistant is very busy right now. Please try again in a minute."
-
+    msg = "Sorry, the assistant is very busy right now. Please try again in a minute."
+    return (msg, []) if return_tools else msg
 
 if __name__=="__main__":
     while True:
