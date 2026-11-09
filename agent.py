@@ -18,7 +18,7 @@ Rules:
 2. Never invent numbers. Only call a calculator when the user gives every number it needs. If one is missing, ask for it and do not call the tool.
 3. When a tool returns a number, report that exact number. Never recalculate it yourself.
 4. Keep answers short. Do not show formulas.
-5. The user cannot see tool results. When search_car_knowledge returns text, answer the user's question using that text, in your own words.
+5. The user cannot see tool results. When search_car_knowledge returns text, only use facts from the search result, do not add facts from your own knowledge.
 6. You only help with cars. For any other topic, politely say so and do not answer from your own knowledge.
 """
 
@@ -51,6 +51,21 @@ MODELS = [
     "gemini-3.1-flash-lite",
 ] 
 
+CALCULATORS = {"fuel_cost", "monthly_payment", "estimate_tco"}
+
+def find_invented_numbers(query, response):
+    text = query.replace(",", "")
+    invented = []
+    for content in (response.automatic_function_calling_history or []):
+        for part in (content.parts or []):
+            call = part.function_call
+            if call and call.name in CALCULATORS:
+                for name, value in (call.args or {}).items():
+                    forms = {str(value), f"{float(value):g}"}
+                    if not any(f in text for f in forms):
+                        invented.append(name.replace("_", " "))
+    return invented
+
 def ask_agent(query,return_tools=False):
     for model in MODELS:
         for attempt in range(2):
@@ -64,6 +79,9 @@ def ask_agent(query,return_tools=False):
                     ),
                 )
                 print(f"model used: {model}")
+                invented = find_invented_numbers(query, response)
+                answer = (f"I need the {', '.join(invented)} to calculate that. Could you share it?"
+                          if invented else response.text)
                 if return_tools:
                     tools_used, tool_outputs = [], []
                     for content in (response.automatic_function_calling_history or []):
@@ -72,8 +90,8 @@ def ask_agent(query,return_tools=False):
                                 tools_used.append(part.function_call.name)
                             if part.function_response:
                                 tool_outputs.append(str(part.function_response.response))
-                    return response.text, tools_used, tool_outputs
-                return response.text
+                    return answer, tools_used, tool_outputs
+                return answer
             except errors.APIError as e:
                 print(f"{model} failed (attempt {attempt + 1}): {e.code}")
                 if e.code in (429,503):
