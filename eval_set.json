@@ -1,0 +1,17 @@
+[
+  {"id": 1,  "question": "What is a Buyers Guide?", "expected_tool": "search_car_knowledge", "must_contain": ["dealer"], "must_not_contain": []},
+  {"id": 2,  "question": "What does it mean when a car is sold as is?", "expected_tool": "search_car_knowledge", "must_contain": ["warrant"], "must_not_contain": []},
+  {"id": 3,  "question": "What is an implied warranty?", "expected_tool": "search_car_knowledge", "must_contain": ["implied"], "must_not_contain": []},
+  {"id": 4,  "question": "Should I get a vehicle history report?", "expected_tool": "search_car_knowledge", "must_contain": ["history"], "must_not_contain": []},
+  {"id": 5,  "question": "Can I have a used car inspected by my own mechanic?", "expected_tool": "search_car_knowledge", "must_contain": ["mechanic"], "must_not_contain": []},
+  {"id": 6,  "question": "What are common Toyota Camry problems?", "expected_tool": "search_car_knowledge", "must_contain": ["oil"], "must_not_contain": []},
+  {"id": 7,  "question": "What problems does the Honda Civic have?", "expected_tool": "search_car_knowledge", "must_contain": ["brake"], "must_not_contain": []},
+  {"id": 8,  "question": "Fuel cost for 500 km at 8 L/100km, price 1.5", "expected_tool": "fuel_cost", "must_contain": ["60"], "must_not_contain": []},
+  {"id": 9,  "question": "How much fuel money for 300 km if my car uses 6.5 L/100km and fuel is 2 per liter?", "expected_tool": "fuel_cost", "must_contain": ["39"], "must_not_contain": []},
+  {"id": 10, "question": "Monthly payment for a 25000 loan at 5% over 5 years", "expected_tool": "monthly_payment", "must_contain": ["471.78"], "must_not_contain": []},
+  {"id": 11, "question": "Total cost of ownership if fuel is 1200 a year, insurance 900, and maintenance 600", "expected_tool": "estimate_tco", "must_contain": ["2700", "2,700"], "must_not_contain": []},
+  {"id": 12, "question": "Fuel cost for 500 km at 8 L/100km", "expected_tool": "any", "must_contain": ["price"], "must_not_contain": ["60"]},
+  {"id": 13, "question": "hi", "expected_tool": null, "must_contain": [], "must_not_contain": []},
+  {"id": 14, "question": "What is the capital of France?", "expected_tool": "any", "must_contain": [], "must_not_contain": ["Paris"]},
+  {"id": 15, "question": "How do I bake a chocolate cake?", "expected_tool": "any", "must_contain": [], "must_not_contain": ["flour", "oven"]}
+]

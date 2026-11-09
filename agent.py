@@ -15,10 +15,11 @@ Tools:
 
 Rules:
 1. For greetings or small talk like "hi" or "thanks", answer directly. Do not call a tool.
-2. Never invent numbers. If a number is missing, ask the user for it.
+2. Never invent numbers. Only call a calculator when the user gives every number it needs. If one is missing, ask for it and do not call the tool.
 3. When a tool returns a number, report that exact number. Never recalculate it yourself.
 4. Keep answers short. Do not show formulas.
 5. The user cannot see tool results. When search_car_knowledge returns text, answer the user's question using that text, in your own words.
+6. You only help with cars. For any other topic, politely say so and do not answer from your own knowledge.
 """
 
 distance_threshold= 0.85
@@ -49,7 +50,8 @@ MODELS = [
     "gemini-flash-lite-latest",
     "gemini-3.1-flash-lite",
 ] 
-def ask_agent(query):
+
+def ask_agent(query,return_tools=False):
     for model in MODELS:
         for attempt in range(2):
             try:
@@ -62,6 +64,15 @@ def ask_agent(query):
                     ),
                 )
                 print(f"model used: {model}")
+                if return_tools:
+                    tools_used, tool_outputs = [], []
+                    for content in (response.automatic_function_calling_history or []):
+                        for part in (content.parts or []):
+                            if part.function_call:
+                                tools_used.append(part.function_call.name)
+                            if part.function_response:
+                                tool_outputs.append(str(part.function_response.response))
+                    return response.text, tools_used, tool_outputs
                 return response.text
             except errors.APIError as e:
                 print(f"{model} failed (attempt {attempt + 1}): {e.code}")
@@ -69,8 +80,8 @@ def ask_agent(query):
                     time.sleep(2)
                     continue
                 break
-    return "Sorry, the assistant is very busy right now. Please try again in a minute."
-
+    msg = "Sorry, the assistant is very busy right now. Please try again in a minute."
+    return (msg, [], []) if return_tools else msg
 
 if __name__=="__main__":
     while True:
