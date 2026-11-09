@@ -1,6 +1,6 @@
 import json
 import time
-from google.genai import types ,errors
+from google.genai import types, errors
 from rag import gemini
 
 JUDGE_MODEL = "gemini-3.5-flash"
@@ -35,7 +35,7 @@ for r in results:
         break
 
     verdict = json.loads(response.text)
-    graded.append({"id": r["id"], **verdict})
+    graded.append({"id": r["id"], "question": r["question"], **verdict})
     print(f"{'SUPPORTED' if verdict['supported'] else 'NOT SUPPORTED'} | #{r['id']} | {verdict['reason']}")
     time.sleep(4)
 
