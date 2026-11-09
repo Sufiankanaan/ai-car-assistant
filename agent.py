@@ -65,13 +65,14 @@ def ask_agent(query,return_tools=False):
                 )
                 print(f"model used: {model}")
                 if return_tools:
-                    tools_used=[
-                        part.function_call.name
-                        for content in (response.automatic_function_calling_history or [])
-                        for part in (content.parts or [])
-                        if part.function_call
-                    ]
-                    return response.text, tools_used
+                    tools_used, tool_outputs = [], []
+                    for content in (response.automatic_function_calling_history or []):
+                        for part in (content.parts or []):
+                            if part.function_call:
+                                tools_used.append(part.function_call.name)
+                            if part.function_response:
+                                tool_outputs.append(str(part.function_response.response))
+                    return response.text, tools_used, tool_outputs
                 return response.text
             except errors.APIError as e:
                 print(f"{model} failed (attempt {attempt + 1}): {e.code}")
@@ -80,7 +81,7 @@ def ask_agent(query,return_tools=False):
                     continue
                 break
     msg = "Sorry, the assistant is very busy right now. Please try again in a minute."
-    return (msg, []) if return_tools else msg
+    return (msg, [], []) if return_tools else msg
 
 if __name__=="__main__":
     while True:

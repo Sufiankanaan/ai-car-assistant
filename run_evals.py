@@ -7,7 +7,7 @@ with open("eval_set.json", encoding="utf-8") as f:
 
 results = []
 for case in cases:
-    answer, tools = ask_agent(case["question"], return_tools=True)
+    answer, tools, outputs = ask_agent(case["question"], return_tools=True)
     text = answer.lower()
 
     expected = case["expected_tool"]
@@ -22,7 +22,7 @@ for case in cases:
     not_contain_ok = not any(w.lower() in text for w in case["must_not_contain"])
 
     passed = tool_ok and contain_ok and not_contain_ok
-    results.append({**case, "answer": answer, "tools": tools, "passed": passed,
+    results.append({**case, "answer": answer, "tools": tools, "context": outputs, "passed": passed,
                     "tool_ok": tool_ok, "contain_ok": contain_ok, "not_contain_ok": not_contain_ok})
     print(f"{'PASS' if passed else 'FAIL'} | #{case['id']} | tools={tools} | {case['question'][:50]}")
     time.sleep(4)
