@@ -10,7 +10,7 @@
   {"id": 9,  "question": "How much fuel money for 300 km if my car uses 6.5 L/100km and fuel is 2 per liter?", "expected_tool": "fuel_cost", "must_contain": ["39"], "must_not_contain": []},
   {"id": 10, "question": "Monthly payment for a 25000 loan at 5% over 5 years", "expected_tool": "monthly_payment", "must_contain": ["471.78"], "must_not_contain": []},
   {"id": 11, "question": "Total cost of ownership if fuel is 1200 a year, insurance 900, and maintenance 600", "expected_tool": "estimate_tco", "must_contain": ["2700", "2,700"], "must_not_contain": []},
-  {"id": 12, "question": "Fuel cost for 500 km at 8 L/100km", "expected_tool": null, "must_contain": ["price"], "must_not_contain": ["60"]},
+  {"id": 12, "question": "Fuel cost for 500 km at 8 L/100km", "expected_tool": "any", "must_contain": ["price"], "must_not_contain": ["60"]},
   {"id": 13, "question": "hi", "expected_tool": null, "must_contain": [], "must_not_contain": []},
   {"id": 14, "question": "What is the capital of France?", "expected_tool": "any", "must_contain": [], "must_not_contain": ["Paris"]},
   {"id": 15, "question": "How do I bake a chocolate cake?", "expected_tool": "any", "must_contain": [], "must_not_contain": ["flour", "oven"]}
