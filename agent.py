@@ -3,6 +3,7 @@ from tools import fuel_cost, monthly_payment, estimate_tco
 from rag import collection, get_embedding,gemini
 from google.genai import types, errors
 import time
+from langfuse import observe, get_client
 
 
 SYSTEM_PROMPT="""You are a car assistant. You help with car questions and car cost calculations.
@@ -66,11 +67,13 @@ def find_invented_numbers(query, response):
                         invented.append(name.replace("_", " "))
     return invented
 
-def ask_agent(query,return_tools=False):
+@observe(name="ask_agent")
+def ask_agent(query, return_tools=False):
+    langfuse = get_client()
     for model in MODELS:
         for attempt in range(2):
             try:
-                response= gemini.models.generate_content(
+                response = gemini.models.generate_content(
                     model=model,
                     contents=query,
                     config=types.GenerateContentConfig(
@@ -79,26 +82,40 @@ def ask_agent(query,return_tools=False):
                     ),
                 )
                 print(f"model used: {model}")
+
+                tools_used, tool_outputs = [], []
+                for content in (response.automatic_function_calling_history or []):
+                    for part in (content.parts or []):
+                        if part.function_call:
+                            tools_used.append(part.function_call.name)
+                        if part.function_response:
+                            tool_outputs.append(str(part.function_response.response))
+
                 invented = find_invented_numbers(query, response)
                 answer = (f"I need the {', '.join(invented)} to calculate that. Could you share it?"
                           if invented else response.text)
-                if return_tools:
-                    tools_used, tool_outputs = [], []
-                    for content in (response.automatic_function_calling_history or []):
-                        for part in (content.parts or []):
-                            if part.function_call:
-                                tools_used.append(part.function_call.name)
-                            if part.function_response:
-                                tool_outputs.append(str(part.function_response.response))
-                    return answer, tools_used, tool_outputs
-                return answer
+
+                langfuse.update_current_span(
+                    input=query,
+                    output=answer,
+                    metadata={
+                        "model": model,
+                        "attempt": attempt + 1,
+                        "tools": tools_used,
+                        "tool_outputs": tool_outputs,
+                        "invented_numbers": invented,
+                    },
+                )
+                return (answer, tools_used, tool_outputs) if return_tools else answer
             except errors.APIError as e:
                 print(f"{model} failed (attempt {attempt + 1}): {e.code}")
-                if e.code in (429,503):
+                if e.code in (429, 503):
                     time.sleep(2)
                     continue
                 break
+
     msg = "Sorry, the assistant is very busy right now. Please try again in a minute."
+    langfuse.update_current_span(input=query, output=msg, metadata={"error": "all models failed"})
     return (msg, [], []) if return_tools else msg
 
 if __name__=="__main__":
@@ -108,6 +125,7 @@ if __name__=="__main__":
             break
         print(ask_agent(query))
         print("-" * 50)
+    get_client().flush()
 
 
 

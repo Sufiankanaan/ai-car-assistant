@@ -32,3 +32,7 @@ print(f"\nScore: {score}/{len(results)} = {score / len(results):.0%}")
 
 with open("eval_results.json", "w", encoding="utf-8") as f:
     json.dump(results, f, indent=2, ensure_ascii=False)
+    
+busy = sum("try again" in r["answer"].lower() for r in results)
+if busy:
+    print(f"Warning: {busy} answers were quota/busy errors, not real results.")
