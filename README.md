@@ -72,6 +72,7 @@ The vector store is saved in `chroma_db/`. On each start, chunks that are alread
 - **Logging:** the search tool prints its query and retrieval distances for debugging.
 - **System prompt rules:** no tools for greetings, never invent numbers, report the tool's number exactly, answer from retrieved text.
 - **Model fallback:** if a Gemini model is busy (503) or rate-limited (429), the agent retries and then tries the next model in a tested list.
+- **Number guard:** a calculator is only trusted when every number it used appears in the user's question; otherwise the agent asks for the missing value.
 
 ## 🛠️ Tech Stack
 
@@ -82,6 +83,7 @@ The vector store is saved in `chroma_db/`. On each start, chunks that are alread
 - **Gradio**: chat interface, deployed on Hugging Face Spaces
 - **Streamlit**: local chat interface
 - **Python 3.12**
+- **Langfuse**: tracing and observability
 
 ## 🔧 Tools
 
@@ -109,18 +111,46 @@ streamlit run app.py
 
 The app opens in your browser at http://localhost:8501. The first start embeds all documents; later starts reuse `chroma_db/`.
 
+## 📏 Evaluation
+
+The agent is tested with a 15-question golden set (`eval_set.json`) and two scripts:
+
+- **`run_evals.py`** checks each answer end to end: the right tool, required keywords, and forbidden ones (for example, no "Paris" for an off-topic question, and no made-up result when a number is missing).
+- **`judge.py`** uses a second Gemini model as an LLM judge to check **faithfulness**: is every claim in a search answer supported by the retrieved chunks?
+
+| Metric | Baseline | Now |
+|---|---|---|
+| End-to-end score | 14/15 | 15/15 |
+| Faithfulness (search answers) | 6/7 | 7/7 |
+
+What the evals caught:
+- Off-topic questions were answered from memory, because the refusal only lived inside the search tool → added a "cars only" rule to the system prompt.
+- A search answer added a fact that wasn't in the retrieved text → tightened the rule to answer only from the search result.
+- The model sometimes invented a missing fuel price, even after prompt rules → added a code guard: every number sent to a calculator must appear in the user's question.
+
+LLM answers vary between runs, so results are checked over several runs, per question, not only by the total score.
+
+## 🔭 Observability
+
+Every request is traced with [Langfuse](https://langfuse.com): the question, the answer, the model used, the tools called, the retrieved chunks, and any numbers the guard flagged.
+
 ## 📁 Project Structure
 
 ```
-├── app.py               # Streamlit web interface
-├── agent.py             # Agent: system prompt, search tool, Gemini call
-├── tools.py             # Calculator tools (fuel, loan, TCO)
-├── rag.py               # Builds the ChromaDB knowledge base, Gemini client
-├── doc_loader.py        # PDF/Word ingestion: convert, clean, chunk, id
-├── calibrate.py         # Measures distances to tune the relevance threshold
-├── docs/                # Source documents (PDF, Word)
-├── cars_knowledge.txt   # Base car knowledge
-├── requirements.txt
+├── gradio_app.py          # Gradio chat UI (live on Hugging Face Spaces)
+├── app.py                 # Streamlit chat UI (local)
+├── agent.py               # Agent: system prompt, search tool, number guard, Gemini call, Langfuse tracing
+├── tools.py               # Calculator tools (fuel, loan, TCO)
+├── rag.py                 # Builds the ChromaDB knowledge base, Gemini client
+├── doc_loader.py          # PDF/Word ingestion: convert, clean, chunk, id
+├── calibrate.py           # Measures distances to tune the relevance threshold
+├── eval_set.json          # 15-question golden set for evaluation
+├── run_evals.py           # End-to-end evals: tool, required and forbidden keywords
+├── judge.py               # LLM-as-judge: checks answers are supported by retrieved text
+├── docs/                  # Source documents (PDF, Word)
+├── cars_knowledge.txt     # Base car knowledge
+├── requirements.txt       # Dependencies
+├── requirements-lock.txt  # Exact working versions (pip freeze)
 └── README.md
 ```
 
@@ -133,6 +163,7 @@ Not committed: `.env` (API key) and `chroma_db/` (rebuilt automatically).
 - On the free tier, Google may use prompts to improve its products, so don't send private data.
 - Changed or deleted files in `docs/` are not detected yet. Delete the `chroma_db/` folder to rebuild the knowledge base. This is also required after changing the embedding model.
 - The threshold was calibrated on 15 questions; a larger evaluation set would make it more reliable.
+- On the free tier, each Gemini model has a small daily request limit, so the live demo and eval runs can hit it.
 
 ## 🔮 Roadmap
 
