@@ -4,3 +4,4 @@ markitdown[pdf,docx]
 langchain-text-splitters
 google-genai
 python-dotenv
+pytest

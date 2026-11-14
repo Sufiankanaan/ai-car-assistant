@@ -4,3 +4,5 @@ __pycache__/
 *.pyc
 .claude/
 .env
+eval_results.json
+judge_results.json

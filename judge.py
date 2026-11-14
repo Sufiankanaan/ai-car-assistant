@@ -3,7 +3,7 @@ import time
 from google.genai import types, errors
 from rag import gemini
 
-JUDGE_MODEL = "gemini-3.5-flash"
+JUDGE_MODELS = ["gemini-3.5-flash", "gemini-flash-lite-latest"]
 
 PROMPT = """You are grading a car assistant's answer.
 
@@ -24,14 +24,29 @@ graded = []
 for r in results:
     if "search_car_knowledge" not in r["tools"]:
         continue
-    try:
-        response = gemini.models.generate_content(
-            model=JUDGE_MODEL,
-            contents=PROMPT.format(question=r["question"], context="\n\n".join(r["context"]), answer=r["answer"]),
-            config=types.GenerateContentConfig(response_mime_type="application/json", temperature=0),
-        )
-    except errors.APIError as e:
-        print(f"Stopped at #{r['id']}: {e.code}. Graded so far are saved.")
+    verdict = None
+    for model in JUDGE_MODELS:
+        for attempt in range(3):
+            try:
+                response = gemini.models.generate_content(
+                    model=model,
+                    contents=PROMPT.format(question=r["question"], context="\n\n".join(r["context"]), answer=r["answer"]),
+                    config=types.GenerateContentConfig(response_mime_type="application/json", temperature=0),
+                )
+                verdict = json.loads(response.text)
+                verdict["judge_model"] = model
+                break
+            except errors.APIError as e:
+                print(f"{model} failed on #{r['id']} (attempt {attempt + 1}): {e.code}")
+                if e.code in (429, 503):
+                    time.sleep(10)
+                    continue
+                break
+        if verdict:
+            break
+
+    if verdict is None:
+        print(f"Stopped at #{r['id']}: all judge models failed. Graded so far are saved.")
         break
 
     verdict = json.loads(response.text)

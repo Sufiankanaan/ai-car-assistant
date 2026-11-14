@@ -4,7 +4,7 @@ from rag import collection, get_embedding,gemini
 from google.genai import types, errors
 import time
 from langfuse import observe, get_client
-
+from guard import find_invented_numbers
 
 SYSTEM_PROMPT="""You are a car assistant. You help with car questions and car cost calculations.
 
@@ -54,18 +54,6 @@ MODELS = [
 
 CALCULATORS = {"fuel_cost", "monthly_payment", "estimate_tco"}
 
-def find_invented_numbers(query, response):
-    text = query.replace(",", "")
-    invented = []
-    for content in (response.automatic_function_calling_history or []):
-        for part in (content.parts or []):
-            call = part.function_call
-            if call and call.name in CALCULATORS:
-                for name, value in (call.args or {}).items():
-                    forms = {str(value), f"{float(value):g}"}
-                    if not any(f in text for f in forms):
-                        invented.append(name.replace("_", " "))
-    return invented
 
 @observe(name="ask_agent")
 def ask_agent(query, return_tools=False):
