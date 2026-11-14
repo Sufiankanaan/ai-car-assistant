@@ -10,7 +10,7 @@ def fuel_cost(distance: float, consumption: float, price_per_liter: float)-> flo
     distance=float(distance)
     consumption=float(consumption)
     price_per_liter=float(price_per_liter)
-    cost = (distance/10)*consumption*price_per_liter
+    cost = (distance/100)*consumption*price_per_liter
     return round(cost,2)
 
 
