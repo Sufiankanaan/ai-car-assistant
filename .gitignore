@@ -5,4 +5,5 @@ __pycache__/
 .claude/
 .env
 eval_results.json
-judge_results.jsondata_later/
+judge_results.json
+data_later/
