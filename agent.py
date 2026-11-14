@@ -4,7 +4,7 @@ from rag import collection, get_embedding,gemini
 from google.genai import types, errors
 import time
 from langfuse import observe, get_client
-
+from guard import find_invented_numbers
 
 SYSTEM_PROMPT="""You are a car assistant. You help with car questions and car cost calculations.
 
