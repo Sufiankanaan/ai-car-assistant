@@ -38,7 +38,7 @@ Documents (docs/*.pdf, *.docx) + cars_knowledge.txt
    ↓  Gemini embeddings (gemini-embedding-001)
 ChromaDB (persistent vector store on disk)
 
-User question (via Streamlit UI)
+User question (via Gradio UI, or Streamlit locally)
    ↓
 Gemini agent (automatic function calling) picks the tool(s)
    ├─ Knowledge question → search_car_knowledge (RAG + relevance threshold)
@@ -54,7 +54,7 @@ Tool results returned to the model → natural answer
 Any PDF or Word file placed in `docs/` is added to the knowledge base on startup. The pipeline in `doc_loader.py`:
 
 1. **Convert** the file to text with MarkItDown
-2. **Remove repeated page footers**: short lines with a page number that repeat on 4+ pages are dropped, so page numbers and booklet titles don't pollute retrieval
+2. **Remove repeated page footers** with a regex (page number + booklet title), so they don't pollute retrieval. The pattern is specific to the FTC guide; new documents may need their own.
 3. **Split** with a recursive character splitter (1000 chars, 75 overlap), breaking on paragraphs, then lines, then sentences
 4. **Merge short chunks** (under 200 chars) into the next one, so no chunk is left without context
 5. **Assign source ids** like `used_car_guide.pdf_chunk_7`, so every retrieved chunk can be traced back to its file
@@ -111,6 +111,17 @@ streamlit run app.py
 
 The app opens in your browser at http://localhost:8501. The first start embeds all documents; later starts reuse `chroma_db/`.
 
+## 🧪 Tests
+
+Fast unit tests cover the deterministic parts: the three calculators and the number guard.
+They use a fake Gemini response, so they need no API key and no quota.
+
+```bash
+pytest -v
+```
+
+11 tests, under a second. The slower LLM evals (`run_evals.py`, `judge.py`) are run before a merge.
+
 ## 📏 Evaluation
 
 The agent is tested with a 15-question golden set (`eval_set.json`) and two scripts:
@@ -139,7 +150,7 @@ Every request is traced with [Langfuse](https://langfuse.com): the question, the
 ```
 ├── gradio_app.py          # Gradio chat UI (live on Hugging Face Spaces)
 ├── app.py                 # Streamlit chat UI (local)
-├── agent.py               # Agent: system prompt, search tool, number guard, Gemini call, Langfuse tracing
+├── agent.py               # Agent: system prompt, search tool, Gemini call, model fallback, Langfuse tracing
 ├── tools.py               # Calculator tools (fuel, loan, TCO)
 ├── rag.py                 # Builds the ChromaDB knowledge base, Gemini client
 ├── doc_loader.py          # PDF/Word ingestion: convert, clean, chunk, id
@@ -151,6 +162,11 @@ Every request is traced with [Langfuse](https://langfuse.com): the question, the
 ├── cars_knowledge.txt     # Base car knowledge
 ├── requirements.txt       # Dependencies
 ├── requirements-lock.txt  # Exact working versions (pip freeze)
+├── guard.py               # Number guard: blocks calculator numbers not found in the question
+├── conftest.py            # Tells pytest where the project root is
+├── tests/
+│   ├── test_tools.py      # Unit tests for the calculators
+│   └── test_guard.py      # Unit tests for the number guard (fake Gemini response, no API calls)
 └── README.md
 ```
 
@@ -158,12 +174,10 @@ Not committed: `.env` (API key) and `chroma_db/` (rebuilt automatically).
 
 ## ⚠️ Known Limitations
 
-- The chat model is a preview version and may change or be retired; the model name is set in one place in `agent.py`.
-- Free-tier rate limits apply, and the API sometimes returns "busy" errors during high demand.
+- On the free tier, each Gemini model has a small daily request limit and is sometimes busy, so the live demo and eval runs can hit it. The agent falls back to other models, but if all are limited, it asks the user to try again.
 - On the free tier, Google may use prompts to improve its products, so don't send private data.
 - Changed or deleted files in `docs/` are not detected yet. Delete the `chroma_db/` folder to rebuild the knowledge base. This is also required after changing the embedding model.
 - The threshold was calibrated on 15 questions; a larger evaluation set would make it more reliable.
-- On the free tier, each Gemini model has a small daily request limit, so the live demo and eval runs can hit it.
 
 ## 🔮 Roadmap
 
