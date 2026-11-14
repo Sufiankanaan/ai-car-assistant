@@ -5,6 +5,7 @@ from tools import fuel_cost,monthly_payment,estimate_tco
     (500, 8, 1.5, 60.0),
     (300, 6.5, 2, 39.0),
     ("500", "8", "1.5", 60.0),
+    (123, 7.3, 1.69, 15.17),
 ])
 def test_fuel_cost(distance, consumption, price, expected):
     assert fuel_cost(distance, consumption, price) == expected
