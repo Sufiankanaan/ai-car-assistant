@@ -1,7 +1,9 @@
-chromadb==1.5.9
-streamlit==1.64.0
 markitdown[pdf,docx]
 langchain-text-splitters
+chromadb
 google-genai
 python-dotenv
+gradio
+streamlit
+langfuse
 pytest
