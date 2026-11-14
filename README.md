@@ -152,25 +152,25 @@ Every request is traced with [Langfuse](https://langfuse.com): the question, the
 ├── app.py                 # Streamlit chat UI (local)
 ├── agent.py               # Agent: system prompt, search tool, Gemini call, model fallback, Langfuse tracing
 ├── tools.py               # Calculator tools (fuel, loan, TCO)
+├── guard.py               # Number guard: blocks calculator numbers not found in the question
 ├── rag.py                 # Builds the ChromaDB knowledge base, Gemini client
 ├── doc_loader.py          # PDF/Word ingestion: convert, clean, chunk, id
 ├── calibrate.py           # Measures distances to tune the relevance threshold
 ├── eval_set.json          # 15-question golden set for evaluation
 ├── run_evals.py           # End-to-end evals: tool, required and forbidden keywords
 ├── judge.py               # LLM-as-judge: checks answers are supported by retrieved text
-├── docs/                  # Source documents (PDF, Word)
-├── cars_knowledge.txt     # Base car knowledge
-├── requirements.txt       # Dependencies
-├── requirements-lock.txt  # Exact working versions (pip freeze)
-├── guard.py               # Number guard: blocks calculator numbers not found in the question
 ├── conftest.py            # Tells pytest where the project root is
 ├── tests/
 │   ├── test_tools.py      # Unit tests for the calculators
 │   └── test_guard.py      # Unit tests for the number guard (fake Gemini response, no API calls)
+├── docs/                  # Source documents (PDF, Word)
+├── cars_knowledge.txt     # Base car knowledge
+├── requirements.txt       # Dependencies
+├── requirements-lock.txt  # Exact working versions (pip freeze)
 └── README.md
 ```
 
-Not committed: `.env` (API key) and `chroma_db/` (rebuilt automatically).
+Not committed: `.env` (API keys) and `chroma_db/` (rebuilt automatically).
 
 ## ⚠️ Known Limitations
 
