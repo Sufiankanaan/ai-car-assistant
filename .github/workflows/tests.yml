@@ -1,4 +1,4 @@
-name: Tests
+name: CI/CD
 
 on:
   push:
@@ -20,3 +20,22 @@ jobs:
 
       - name: Run unit tests
         run: pytest -v
+
+  deploy:
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install deploy dependencies
+        run: pip install huggingface_hub
+
+      - name: Deploy to Hugging Face Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: python deploy_space.py
