@@ -122,6 +122,15 @@ pytest -v
 
 11 tests, under a second. The slower LLM evals (`run_evals.py`, `judge.py`) are run before a merge.
 
+## 🔄 CI/CD
+
+GitHub Actions runs on every pull request and every merge to `main`:
+
+1. **Test:** installs pytest and runs the unit tests.
+2. **Deploy:** only on `main`, and only if the tests pass, `deploy_space.py` uploads the app files to the Hugging Face Space.
+
+A branch ruleset blocks merging a pull request whose tests fail. The Hugging Face token is stored as a GitHub secret, never in the code.
+
 ## 📏 Evaluation
 
 The agent is tested with a 15-question golden set (`eval_set.json`) and two scripts:
@@ -163,6 +172,9 @@ Every request is traced with [Langfuse](https://langfuse.com): the question, the
 ├── tests/
 │   ├── test_tools.py      # Unit tests for the calculators
 │   └── test_guard.py      # Unit tests for the number guard (fake Gemini response, no API calls)
+├── deploy_space.py        # Uploads the app files to the Hugging Face Space (used by CD)
+├── .github/workflows/
+│   └── tests.yml          # CI/CD: unit tests on every PR, deploy on main
 ├── docs/                  # Source documents (PDF, Word)
 ├── cars_knowledge.txt     # Base car knowledge
 ├── requirements.txt       # Dependencies
