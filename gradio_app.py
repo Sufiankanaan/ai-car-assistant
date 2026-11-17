@@ -7,10 +7,10 @@ try:
 except ImportError:
     pass
 import gradio as gr
-from agent import ask_agent
+from agent_graph import ask_graph
 
-def respond(message, history):
-    return ask_agent(message)
+def respond(message, history, request: gr.Request):
+    return ask_graph(message, thread_id=request.session_hash)
 
 demo = gr.ChatInterface(
     fn=respond,

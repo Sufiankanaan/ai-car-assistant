@@ -27,3 +27,17 @@ def test_comma_in_number():
 def test_search_tool_is_ignored():
     response = fake_response("search_car_knowledge", {"query": "Buyers Guide 999"})
     assert find_invented_numbers("What is a Buyers Guide?", response) == []
+
+from guard import find_invented_in_calls
+
+
+def test_numbers_from_earlier_messages_are_allowed():
+    user_text = "Fuel cost for 500 km at 8 L/100km\n3.20"
+    calls = [{"name": "fuel_cost", "args": {"distance": 500, "consumption": 8, "price_per_liter": 3.2}}]
+    assert find_invented_in_calls(user_text, calls) == []
+
+
+def test_number_only_in_agent_text_is_still_invented():
+    user_text = "Fuel cost for 500 km at 8 L/100km"
+    calls = [{"name": "fuel_cost", "args": {"distance": 500, "consumption": 8, "price_per_liter": 1.5}}]
+    assert find_invented_in_calls(user_text, calls) == ["price per liter"]

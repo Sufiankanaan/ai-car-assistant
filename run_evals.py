@@ -1,13 +1,23 @@
 import json
 import time
-from agent import ask_agent
+import sys
+import uuid
+
+if "--graph" in sys.argv:
+    from agent_graph import ask_graph
+    def ask(question):
+        return ask_graph(question, thread_id=str(uuid.uuid4()), return_tools=True)
+else:
+    from agent import ask_agent
+    def ask(question):
+        return ask_agent(question, return_tools=True)
 
 with open("eval_set.json", encoding="utf-8") as f:
     cases = json.load(f)
 
 results = []
 for case in cases:
-    answer, tools, outputs = ask_agent(case["question"], return_tools=True)
+    answer, tools, outputs = ask(case["question"])
     text = answer.lower()
 
     expected = case["expected_tool"]
