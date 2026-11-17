@@ -7,3 +7,6 @@ gradio
 streamlit
 langfuse
 pytest
+langgraph
+langchain
+langchain-google-genai
