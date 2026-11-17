@@ -23,6 +23,7 @@ graph = create_agent(
 
 
 def ask_graph(query, thread_id="default", return_tools=False):
+    from guard import find_invented_in_calls
     result = graph.invoke(
         {"messages": [{"role": "user", "content": query}]},
         {"configurable": {"thread_id": thread_id}},
@@ -30,6 +31,11 @@ def ask_graph(query, thread_id="default", return_tools=False):
     messages = result["messages"]
     content = messages[-1].content
     if isinstance(content, list):
+        user_text = "\n".join(str(m.content) for m in messages if m.type == "human")
+        calls = [call for m in messages for call in (getattr(m, "tool_calls", None) or [])]
+        invented = find_invented_in_calls(user_text, calls)
+        if invented:
+            content = f"I need the {', '.join(invented)} to calculate that. Could you share it?"
         content = "".join(p.get("text", "") for p in content if isinstance(p, dict))
 
     if return_tools:
