@@ -4,6 +4,7 @@ from huggingface_hub import HfApi
 APP_FILES = [
     "gradio_app.py",
     "agent.py",
+    "agent_graph.py",
     "tools.py",
     "guard.py",
     "rag.py",
