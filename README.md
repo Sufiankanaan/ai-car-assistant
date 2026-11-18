@@ -13,7 +13,7 @@ license: mit
 # 🚗 AI Car Assistant — RAG + Agent System
 **🔗 Live demo:** https://huggingface.co/spaces/ksufian/ai-car-assistant
 
-An intelligent car assistant that answers questions from a knowledge base and performs calculations, deciding on its own which capability to use for each question. Combines Retrieval-Augmented Generation (RAG) with a tool-calling agent, served through a Gradio chat interface, live on Hugging Face Spaces.
+An intelligent car assistant that answers questions from a knowledge base and performs calculations, deciding on its own which capability to use for each question. Combines Retrieval-Augmented Generation (RAG) with a LangGraph tool-calling agent that remembers the conversation, served through a Gradio chat interface, live on Hugging Face Spaces.
 
 Runs on the Google Gemini API free tier, so it needs no local GPU and no paid account.
 
@@ -40,7 +40,7 @@ ChromaDB (persistent vector store on disk)
 
 User question (via Gradio UI, or Streamlit locally)
    ↓
-Gemini agent (automatic function calling) picks the tool(s)
+LangGraph agent (Gemini, retry + model fallback, memory per session) picks the tool(s)
    ├─ Knowledge question → search_car_knowledge (RAG + relevance threshold)
    ├─ Fuel question      → fuel_cost
    ├─ Loan question      → monthly_payment
@@ -63,6 +63,15 @@ On the FTC guide *Buying a Used Car From a Dealer*, this turned 20 raw chunks ra
 
 The vector store is saved in `chroma_db/`. On each start, chunks that are already stored are skipped, so only new files are embedded.
 
+## 🧠 Memory
+
+The agent is built with LangGraph. A checkpointer saves each conversation's messages, so follow-ups work:
+
+- *"Fuel cost for 500 km at 8 L/100km"* → asks for the price
+- *"3.20"* → **128**, because it remembers the first message
+
+Each browser session gets its own thread ID, so visitors never see each other's conversations. The number guard checks all of the user's messages in the thread, not only the last one, so numbers given earlier aren't flagged as invented.
+
 ## 🛡️ Reliability
 
 - **Calibrated relevance threshold:** retrieved chunks with a distance above 0.85 are dropped. The value comes from `calibrate.py`, which compares 10 car questions (best match 0.445–0.699) with 5 off-topic questions (0.991–1.067).
@@ -71,7 +80,7 @@ The vector store is saved in `chroma_db/`. On each start, chunks that are alread
 - **API error handling:** if the Gemini API is busy or fails, the user gets a short message instead of a crash.
 - **Logging:** the search tool prints its query and retrieval distances for debugging.
 - **System prompt rules:** no tools for greetings, never invent numbers, report the tool's number exactly, answer from retrieved text.
-- **Model fallback:** if a Gemini model is busy (503) or rate-limited (429), the agent retries and then tries the next model in a tested list.
+- **Model retry and fallback:** LangChain middleware retries a busy model, then switches to the next model in a tested list.
 - **Number guard:** a calculator is only trusted when every number it used appears in the user's question; otherwise the agent asks for the missing value.
 
 ## 🛠️ Tech Stack
@@ -80,6 +89,7 @@ The vector store is saved in `chroma_db/`. On each start, chunks that are alread
 - **ChromaDB**: persistent vector database
 - **MarkItDown**: converts PDF and Word files to text
 - **LangChain Text Splitters**: recursive character chunking
+- **LangGraph / LangChain**: agent graph, conversation memory, retry and fallback middleware
 - **Gradio**: chat interface, deployed on Hugging Face Spaces
 - **Streamlit**: local chat interface
 - **Python 3.12**
@@ -120,7 +130,7 @@ They use a fake Gemini response, so they need no API key and no quota.
 pytest -v
 ```
 
-11 tests, under a second. The slower LLM evals (`run_evals.py`, `judge.py`) are run before a merge.
+14 tests, under a second, including one that checks every module the app imports is in the deploy list.
 
 ## 🔄 CI/CD
 
@@ -160,6 +170,7 @@ Every request is traced with [Langfuse](https://langfuse.com): the question, the
 ├── gradio_app.py          # Gradio chat UI (live on Hugging Face Spaces)
 ├── app.py                 # Streamlit chat UI (local)
 ├── agent.py               # Agent: system prompt, search tool, Gemini call, model fallback, Langfuse tracing
+├── agent_graph.py         # LangGraph agent: memory, retry/fallback middleware, guard, Langfuse callbacks (used live)
 ├── tools.py               # Calculator tools (fuel, loan, TCO)
 ├── guard.py               # Number guard: blocks calculator numbers not found in the question
 ├── rag.py                 # Builds the ChromaDB knowledge base, Gemini client
@@ -172,6 +183,7 @@ Every request is traced with [Langfuse](https://langfuse.com): the question, the
 ├── tests/
 │   ├── test_tools.py      # Unit tests for the calculators
 │   └── test_guard.py      # Unit tests for the number guard (fake Gemini response, no API calls)
+│   └── test_deploy.py     # Checks every module the app imports is deployed
 ├── deploy_space.py        # Uploads the app files to the Hugging Face Space (used by CD)
 ├── .github/workflows/
 │   └── tests.yml          # CI/CD: unit tests on every PR, deploy on main
@@ -190,6 +202,8 @@ Not committed: `.env` (API keys) and `chroma_db/` (rebuilt automatically).
 - On the free tier, Google may use prompts to improve its products, so don't send private data.
 - Changed or deleted files in `docs/` are not detected yet. Delete the `chroma_db/` folder to rebuild the knowledge base. This is also required after changing the embedding model.
 - The threshold was calibrated on 15 questions; a larger evaluation set would make it more reliable.
+- Conversation memory is stored in RAM, so it resets when the Space restarts.
+- The number guard corrects the reply, but the model's original answer stays in the conversation memory.
 
 ## 🔮 Roadmap
 
