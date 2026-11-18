@@ -24,7 +24,6 @@ def main():
         repo_type="space",
         allow_patterns=APP_FILES,
         commit_message=f"Deploy {os.environ.get('GITHUB_SHA', 'local')[:7]} from GitHub",
-        allow_patterns=APP_FILES,
         delete_patterns=["*.py", "*.txt", "*.md", "docs/*"],
     )
     print("Deployed:", ", ".join(APP_FILES))
