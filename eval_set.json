@@ -13,5 +13,7 @@
   {"id": 12, "question": "Fuel cost for 500 km at 8 L/100km", "expected_tool": "any", "must_contain": ["price"], "must_not_contain": ["60"]},
   {"id": 13, "question": "hi", "expected_tool": null, "must_contain": [], "must_not_contain": []},
   {"id": 14, "question": "What is the capital of France?", "expected_tool": "any", "must_contain": [], "must_not_contain": ["Paris"]},
-  {"id": 15, "question": "How do I bake a chocolate cake?", "expected_tool": "any", "must_contain": [], "must_not_contain": ["flour", "oven"]}
+  {"id": 15, "question": "How do I bake a chocolate cake?", "expected_tool": "any", "must_contain": [], "must_not_contain": ["flour", "oven"]},
+  {"id": 16, "turns": ["Fuel cost for 500 km at 8 L/100km", "3.20"], "expected_tool": "fuel_cost", "must_contain": ["128"], "must_not_contain": []},
+  {"id": 17, "turns": ["Monthly payment for a 25000 loan at 5%", "5 years"], "expected_tool": "monthly_payment", "must_contain": ["471.78"], "must_not_contain": []}
 ]

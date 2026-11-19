@@ -1,23 +1,37 @@
 import json
-import time
 import sys
+import time
 import uuid
 
-if "--graph" in sys.argv:
+GRAPH = "--graph" in sys.argv
+
+if GRAPH:
     from agent_graph import ask_graph
-    def ask(question):
-        return ask_graph(question, thread_id=str(uuid.uuid4()), return_tools=True)
+
+    def ask(question, thread_id):
+        return ask_graph(question, thread_id=thread_id, return_tools=True)
 else:
     from agent import ask_agent
-    def ask(question):
+
+    def ask(question, thread_id):
         return ask_agent(question, return_tools=True)
+
 
 with open("eval_set.json", encoding="utf-8") as f:
     cases = json.load(f)
 
 results = []
 for case in cases:
-    answer, tools, outputs = ask(case["question"])
+    turns = case.get("turns") or [case["question"]]
+    if len(turns) > 1 and not GRAPH:
+        print(f"SKIP | #{case['id']} | multi-turn needs memory")
+        continue
+
+    thread_id = str(uuid.uuid4())
+    for turn in turns:
+        answer, tools, outputs = ask(turn, thread_id)
+        time.sleep(2)
+    case["question"] = " → ".join(turns)
     text = answer.lower()
 
     expected = case["expected_tool"]
@@ -40,9 +54,12 @@ for case in cases:
 score = sum(r["passed"] for r in results)
 print(f"\nScore: {score}/{len(results)} = {score / len(results):.0%}")
 
-with open("eval_results.json", "w", encoding="utf-8") as f:
-    json.dump(results, f, indent=2, ensure_ascii=False)
-    
 busy = sum("try again" in r["answer"].lower() for r in results)
 if busy:
     print(f"Warning: {busy} answers were quota/busy errors, not real results.")
+
+with open("eval_results.json", "w", encoding="utf-8") as f:
+    json.dump(results, f, indent=2, ensure_ascii=False)
+
+from langfuse import get_client
+get_client().flush()
