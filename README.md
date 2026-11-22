@@ -90,6 +90,7 @@ Each browser session gets its own thread ID, so visitors never see each other's 
 - **MarkItDown**: converts PDF and Word files to text
 - **LangChain Text Splitters**: recursive character chunking
 - **LangGraph / LangChain**: agent graph, conversation memory, retry and fallback middleware
+- **MCP (Model Context Protocol)**: exposes the calculators to MCP clients such as Claude Code
 - **Gradio**: chat interface, deployed on Hugging Face Spaces
 - **Streamlit**: local chat interface
 - **Python 3.12**
@@ -123,14 +124,14 @@ The app opens in your browser at http://localhost:8501. The first start embeds a
 
 ## 🧪 Tests
 
-Fast unit tests cover the deterministic parts: the three calculators and the number guard.
+Fast unit tests cover the deterministic parts: the three calculators, the number guard, the deploy list, and the MCP server.
 They use a fake Gemini response, so they need no API key and no quota.
 
 ```bash
 pytest -v
 ```
 
-14 tests, under a second, including one that checks every module the app imports is in the deploy list.
+16 tests, under a second, including one that checks every module the app imports is in the deploy list and two that check the MCP server lists the three calculators with descriptions.
 
 ## 🔄 CI/CD
 
@@ -143,14 +144,14 @@ A branch ruleset blocks merging a pull request whose tests fail. The Hugging Fac
 
 ## 📏 Evaluation
 
-The agent is tested with a 15-question golden set (`eval_set.json`) and two scripts:
+The agent is tested with a 17-case golden set (`eval_set.json`, including two multi-turn cases that need conversation memory) and two scripts:
 
 - **`run_evals.py`** checks each answer end to end: the right tool, required keywords, and forbidden ones (for example, no "Paris" for an off-topic question, and no made-up result when a number is missing).
 - **`judge.py`** uses a second Gemini model as an LLM judge to check **faithfulness**: is every claim in a search answer supported by the retrieved chunks?
 
 | Metric | Baseline | Now |
 |---|---|---|
-| End-to-end score | 14/15 | 15/15 |
+| End-to-end score | 14/15 | 17/17 |
 | Faithfulness (search answers) | 6/7 | 7/7 |
 
 What the evals caught:
@@ -159,6 +160,15 @@ What the evals caught:
 - The model sometimes invented a missing fuel price, even after prompt rules → added a code guard: every number sent to a calculator must appear in the user's question.
 
 LLM answers vary between runs, so results are checked over several runs, per question, not only by the total score.
+
+## 🔌 MCP Server
+
+`mcp_server.py` exposes the same three calculators (`fuel_cost`, `monthly_payment`, `estimate_tco`) over the Model Context Protocol, so any MCP client, such as Claude Code, can call them. No new code was written for the tools: the server reads their names, type hints, and docstrings. It runs locally and is not part of the Space deploy.
+
+```bash
+pip install mcp
+python mcp_server.py
+```
 
 ## 🔭 Observability
 
@@ -176,14 +186,16 @@ Every request is traced with [Langfuse](https://langfuse.com): the question, the
 ├── rag.py                 # Builds the ChromaDB knowledge base, Gemini client
 ├── doc_loader.py          # PDF/Word ingestion: convert, clean, chunk, id
 ├── calibrate.py           # Measures distances to tune the relevance threshold
-├── eval_set.json          # 15-question golden set for evaluation
+├── mcp_server.py          # MCP server exposing the three calculators
+├── eval_set.json          # 17-case golden set for evaluation (2 multi-turn)
 ├── run_evals.py           # End-to-end evals: tool, required and forbidden keywords
 ├── judge.py               # LLM-as-judge: checks answers are supported by retrieved text
 ├── conftest.py            # Tells pytest where the project root is
 ├── tests/
 │   ├── test_tools.py      # Unit tests for the calculators
-│   └── test_guard.py      # Unit tests for the number guard (fake Gemini response, no API calls)
-│   └── test_deploy.py     # Checks every module the app imports is deployed
+│   ├── test_guard.py      # Unit tests for the number guard (fake Gemini response, no API calls)
+│   ├── test_deploy.py     # Checks every module the app imports is deployed
+│   └── test_mcp_server.py # Checks the MCP server lists the three calculators
 ├── deploy_space.py        # Uploads the app files to the Hugging Face Space (used by CD)
 ├── .github/workflows/
 │   └── tests.yml          # CI/CD: unit tests on every PR, deploy on main
