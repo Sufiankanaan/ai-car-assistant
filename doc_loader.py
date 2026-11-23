@@ -60,7 +60,7 @@ def load_and_chunk(file_path):
     text=md.convert(file_path).markdown
     text = remove_footers(text)
     chunks = [c.strip() for c in splitter.split_text(text) if c.strip()]
-    chunks = merge_short(chunks)                             # فراغ 2
+    chunks = merge_short(chunks)
     ids = make_ids(file_path, chunks)
     return chunks,ids 
 
