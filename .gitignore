@@ -7,3 +7,4 @@ __pycache__/
 eval_results.json
 judge_results.json
 data_later/
+venv-exp/
