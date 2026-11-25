@@ -16,7 +16,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install test dependencies
-        run: pip install pytest mcp
+        run: pip install pytest mcp chromadb google-genai python-dotenv markitdown langchain-text-splitters
 
       - name: Run unit tests
         run: pytest -v

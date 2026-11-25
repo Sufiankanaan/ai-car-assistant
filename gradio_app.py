@@ -8,10 +8,12 @@ except ImportError:
     pass
 import gradio as gr
 from agent_graph import ask_graph
+from rag import build_store
 
 def respond(message, history, request: gr.Request):
     return ask_graph(message, thread_id=request.session_hash)
 
+build_store()
 demo = gr.ChatInterface(
     fn=respond,
     title="🚗 AI Car Assistant",
